@@ -1,0 +1,10 @@
+target/
+**/target/
+*.so
+*.a
+*.dylib
+.DS_Store
+.idea/
+*.iml
+.gradle/
+build/
