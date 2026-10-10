@@ -1,0 +1,57 @@
+[package]
+name = "umbera-core"
+version = "1.0.0"
+edition = "2021"
+rust-version = "1.85"
+description = "Umbera cryptographic core: post-quantum primitives, MLS group messaging, message franking."
+license-file = "../LICENSE.md"
+publish = false
+
+[lib]
+name = "umbera_core"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+
+[dependencies]
+openmls = "0.6"
+openmls_rust_crypto = "0.3"
+openmls_memory_storage = "0.3"
+openmls_basic_credential = "0.3"
+openmls_traits = "0.3"
+tls_codec = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "1"
+uniffi = { version = "0.28", features = ["cli"] }
+curve25519-dalek = "4"
+sha2 = "0.10"
+hmac = "0.12"
+getrandom = "0.2"
+base64 = "0.22"
+blake3 = "1"
+bs58 = "0.5"
+argon2 = "0.5"
+pbkdf2 = "0.12"
+hkdf = "0.12"
+aes-gcm = "0.10"
+x25519-dalek = "2"
+k256 = { version = "0.13", default-features = false, features = ["ecdsa", "std"] }
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }
+ml-kem = { version = "0.3", features = ["hazmat", "zeroize"] }
+ml-dsa = { version = "0.1", default-features = false, features = ["alloc", "zeroize"] }
+lopdf = { version = "0.44", default-features = false }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+blake3 = { version = "1", features = ["pure"] }
+
+[dev-dependencies]
+hex = "0.4"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
