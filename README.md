@@ -54,7 +54,8 @@ Umbera device. It is published so that anyone can read it, run its tests and che
 | [Repository layout](#repository-layout) | [Run the tests](docs/PROOF.md#run-it-yourself) | [Rendezvous addressing](docs/PROTOCOL.md#7-rendezvous-addressing) |
 | [Build and test](#build-and-test) | [Verify a call with Wireshark](docs/PROOF.md#verify-it-with-a-packet-capture) | [Groups: MLS](docs/PROTOCOL.md#12-groups-mls) |
 | [Security](#security) | [Report a flaw](docs/PROOF.md#found-a-flaw) | [Key transparency](docs/PROTOCOL.md#14-key-transparency) |
-| [License](#license) | | [All sections](docs/PROTOCOL.md#contents) |
+| [Contact](#contact) | | [All sections](docs/PROTOCOL.md#contents) |
+| [License](#license) | | |
 
 ## Why this repository exists
 
@@ -181,6 +182,16 @@ published for review. See [kotlin/README.md](kotlin/README.md).
 ## Security
 
 Found a vulnerability? Please report it privately — see [SECURITY.md](SECURITY.md). We answer every report.
+
+<p align="right"><a href="#top">↑ Back to top</a></p>
+
+## Contact
+
+| | |
+|---|---|
+| Questions, partnerships, licensing | [info@umbera.app](mailto:info@umbera.app) |
+| Abuse reports | [abuse@umbera.app](mailto:abuse@umbera.app) |
+| Security issues | see [SECURITY.md](SECURITY.md) |
 
 <p align="right"><a href="#top">↑ Back to top</a></p>
 
