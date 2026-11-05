@@ -1,7 +1,7 @@
 <a id="top"></a>
 
 <p align="center">
-  <img src="docs/assets/banner.png" alt="umbera/core — the cryptographic core of the Umbera messenger" width="100%">
+  <img src="https://umbera.app/brand/github-core-banner.png" alt="umbera/core — the cryptographic core of the Umbera messenger" width="100%">
 </p>
 
 <p align="center">
