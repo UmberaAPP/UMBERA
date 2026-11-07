@@ -9,7 +9,7 @@
   <img alt="Rust" src="https://img.shields.io/badge/rust-1.85%2B-1f1d29?style=flat-square&logo=rust">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/kotlin-multiplatform-1f1d29?style=flat-square&logo=kotlin">
   <img alt="Post-quantum" src="https://img.shields.io/badge/post--quantum-ML--KEM%20%C2%B7%20ML--DSA-6aa0ff?style=flat-square">
-  <img alt="Tests: 30 passing" src="https://img.shields.io/badge/tests-30%20passing-5fd3a1?style=flat-square">
+  <img alt="Tests: 36 passing" src="https://img.shields.io/badge/tests-36%20passing-5fd3a1?style=flat-square">
 </p>
 
 <p align="center">
@@ -22,7 +22,8 @@
 <p align="center">
   <a href="docs/PROOF.md"><img alt="Proof" src="https://img.shields.io/badge/Proof-5fd3a1?style=for-the-badge"></a>
   <a href="docs/PROOF.md#1-messages"><img alt="Messages" src="https://img.shields.io/badge/Messages-2c6b55?style=for-the-badge"></a>
-  <a href="docs/PROOF.md#2-calls"><img alt="Calls" src="https://img.shields.io/badge/Calls-2c6b55?style=for-the-badge"></a>
+  <a href="docs/PROOF.md#2-group-chats"><img alt="Groups" src="https://img.shields.io/badge/Groups-2c6b55?style=for-the-badge"></a>
+  <a href="docs/PROOF.md#3-calls"><img alt="Calls" src="https://img.shields.io/badge/Calls-2c6b55?style=for-the-badge"></a>
   <a href="docs/PROOF.md#run-it-yourself"><img alt="Run the tests" src="https://img.shields.io/badge/Run%20the%20tests-2c6b55?style=for-the-badge"></a>
 </p>
 
@@ -50,8 +51,8 @@ claims and reuse it.
 |---|---|---|
 | [Why this repository exists](#why-this-repository-exists) | [The claims](docs/PROOF.md#the-claims) | [What the relay sees](docs/PROTOCOL.md#2-what-the-relay-sees) |
 | [Architecture](#architecture) | [Assumptions](docs/PROOF.md#assumptions) | [Hybrid key agreement](docs/PROTOCOL.md#4-hybrid-key-agreement) |
-| [How a message travels](#how-a-message-travels) | [Messages](docs/PROOF.md#1-messages) | [Double Ratchet](docs/PROTOCOL.md#5-one-to-one-sessions-double-ratchet) |
-| [Cryptographic primitives](#cryptographic-primitives) | [Calls](docs/PROOF.md#2-calls) | [Sealed sender](docs/PROTOCOL.md#6-sealed-sender) |
+| [How a message travels](#how-a-message-travels) | [Messages](docs/PROOF.md#1-messages) · [Groups](docs/PROOF.md#2-group-chats) | [Double Ratchet](docs/PROTOCOL.md#5-one-to-one-sessions-double-ratchet) |
+| [Cryptographic primitives](#cryptographic-primitives) | [Calls](docs/PROOF.md#3-calls) | [Sealed sender](docs/PROTOCOL.md#6-sealed-sender) |
 | [Repository layout](#repository-layout) | [Run the tests](docs/PROOF.md#run-it-yourself) | [Rendezvous addressing](docs/PROTOCOL.md#7-rendezvous-addressing) |
 | [Build and test](#build-and-test) | [Verify a call with Wireshark](docs/PROOF.md#verify-it-with-a-packet-capture) | [Groups: MLS](docs/PROTOCOL.md#12-groups-mls) |
 | [Security](#security) | [Report a flaw](docs/PROOF.md#found-a-flaw) | [Key transparency](docs/PROTOCOL.md#14-key-transparency) |
@@ -114,8 +115,8 @@ The full specification, including every wire format and domain-separation label,
 [**docs/PROTOCOL.md**](docs/PROTOCOL.md).
 
 > **Don't trust, verify.** [docs/PROOF.md](docs/PROOF.md) shows, with code references, runnable tests
-> and a packet-capture procedure, that nobody but the recipient can read a message and nobody but the
-> participants can listen to a call.
+> and a packet-capture procedure, that nobody but the recipient can read a message, nobody but the
+> members can read a group chat and nobody but the participants can listen to a call.
 
 <p align="right"><a href="#top">↑ Back to top</a></p>
 
@@ -166,6 +167,7 @@ cargo test
 ```
 test result: ok. 23 passed; 0 failed
 test result: ok. 7 passed; 0 failed     (tests/proof.rs)
+test result: ok. 6 passed; 0 failed     (tests/proof_groups.rs)
 ```
 
 The tests include known-answer vectors for every primitive and end-to-end checks of ML-KEM-1024 and
