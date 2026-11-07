@@ -296,4 +296,4 @@ source files listed below.
 
 ---
 
-<p align="center"><sub>© 2026 Umbera · <a href="https://umbera.app">umbera.app</a> · <a href="../LICENSE.md">PolyForm Strict 1.0.0</a></sub></p>
+<p align="center"><sub>© 2026 Umbera · <a href="https://umbera.app">umbera.app</a> · <a href="../LICENSE">Apache-2.0</a></sub></p>

@@ -138,4 +138,4 @@ You can confirm with standard tools that no unencrypted media leaves your phone:
 If you can break either claim, we want to know first. Report it privately as described in
 [SECURITY.md](../SECURITY.md).
 
-<p align="center"><sub>© 2026 Umbera · <a href="https://umbera.app">umbera.app</a> · <a href="../LICENSE.md">PolyForm Strict 1.0.0</a></sub></p>
+<p align="center"><sub>© 2026 Umbera · <a href="https://umbera.app">umbera.app</a> · <a href="../LICENSE">Apache-2.0</a></sub></p>
