@@ -5,7 +5,12 @@ edition = "2021"
 rust-version = "1.85"
 description = "Umbera cryptographic core: post-quantum primitives, MLS group messaging, message franking."
 license = "Apache-2.0"
-publish = false
+repository = "https://github.com/UmberaAPP/UMBERA"
+homepage = "https://umbera.app"
+documentation = "https://docs.rs/umbera-core"
+readme = "README.md"
+keywords = ["post-quantum", "ml-kem", "mls", "e2ee", "messenger"]
+categories = ["cryptography"]
 
 [lib]
 name = "umbera_core"
