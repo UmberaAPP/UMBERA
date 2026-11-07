@@ -4,7 +4,7 @@ version = "1.0.0"
 edition = "2021"
 rust-version = "1.85"
 description = "Umbera cryptographic core: post-quantum primitives, MLS group messaging, message franking."
-license-file = "../LICENSE.md"
+license = "Apache-2.0"
 publish = false
 
 [lib]
