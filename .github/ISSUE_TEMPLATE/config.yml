@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/UmberaAPP/UMBERA/blob/main/SECURITY.md
+    about: Please report vulnerabilities privately by e-mail, not in a public issue.
+  - name: Ask a question about the protocol
+    url: https://github.com/UmberaAPP/UMBERA/discussions
+    about: Questions and ideas go to Discussions.
