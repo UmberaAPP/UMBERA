@@ -2,9 +2,9 @@
   <img src="assets/banner.png" alt="umbera/core" width="100%">
 </p>
 
-# Proof: nobody but the recipient can read your messages or listen to your calls
+# Proof: nobody but the recipient can read your messages, group chats or calls
 
-This document makes two precise claims and gives you the means to check each of them yourself.
+This document makes three precise claims and gives you the means to check each of them yourself.
 Nothing here asks to be taken on trust: every step points to code you can read, tests you can run,
 or traffic you can capture.
 
@@ -12,7 +12,10 @@ or traffic you can capture.
 
 1. **Messages.** Only the intended recipient can read a message. The Umbera server, the hosting
    provider, the network and anyone who copies the server's database see only ciphertext.
-2. **Calls.** Only the two participants can hear or see a call. The relay that forwards call traffic
+2. **Group chats.** Only the current members of a group can read its messages. A person who is not
+   a member, a removed member and the server cannot read them, and a new member cannot read what was
+   sent before they joined.
+3. **Calls.** Only the two participants can hear or see a call. The relay that forwards call traffic
    and anyone on the network see only encrypted packets, and the server cannot insert itself between
    the participants.
 
@@ -99,7 +102,50 @@ Kyber key.
 
 ---
 
-## 2. Calls
+## 2. Group chats
+
+### How it works
+
+- Groups use **MLS** (Messaging Layer Security, [RFC 9420](https://www.rfc-editor.org/rfc/rfc9420)) through
+  [OpenMLS](https://github.com/openmls/openmls). The code is the `MlsClient` in
+  [`core/src/lib.rs`](../core/src/lib.rs), the same one the apps call for every group.
+- Every change of membership (add, remove, key update) is a signed **Commit** that moves the group to a
+  new **epoch** with fresh keys. Messages are encrypted with the keys of the current epoch only.
+- A removed member is cut out of the key tree by the Commit, so they cannot derive the keys of any later
+  epoch. A new member receives only the current epoch's secrets in their Welcome, so earlier epochs stay
+  closed to them.
+- Every member checks the member cap on incoming Commits, not only the admin
+  (`member_cap_enforced_at_crypto_layer` in `src/lib.rs`), and every application message carries the
+  authenticated sender identity (`application_messages_carry_the_authenticated_sender`).
+- Ciphersuite: `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`. **Groups are not post-quantum yet** — the
+  hybrid ML-KEM protection described above covers 1:1 messages. We will move groups to a post-quantum or
+  hybrid MLS ciphersuite once one is standardised and available in OpenMLS.
+
+### Run it yourself
+
+[`tests/proof_groups.rs`](../core/tests/proof_groups.rs) checks each part of the claim directly:
+
+```bash
+cd core
+cargo test --test proof_groups
+```
+
+```
+test every_member_can_read_a_group_message ... ok
+test the_server_only_sees_ciphertext ... ok
+test an_outsider_cannot_read_it ... ok
+test a_removed_member_cannot_read_new_messages ... ok
+test a_new_member_cannot_read_older_messages ... ok
+test a_key_update_moves_the_group_to_a_new_epoch ... ok
+test result: ok. 6 passed; 0 failed
+```
+
+`an_outsider_cannot_read_it` even gives the outsider her own group under the very same group id —
+she still cannot decrypt the real group's messages.
+
+---
+
+## 3. Calls
 
 <p align="center"><img src="assets/calls.svg" alt="How calls are encrypted" width="100%"></p>
 
@@ -135,7 +181,7 @@ You can confirm with standard tools that no unencrypted media leaves your phone:
 
 ## Found a flaw?
 
-If you can break either claim, we want to know first. Report it privately as described in
+If you can break any of these claims, we want to know first. Report it privately as described in
 [SECURITY.md](../SECURITY.md).
 
 <p align="center"><sub>© 2026 Umbera · <a href="https://umbera.app">umbera.app</a> · <a href="../LICENSE">Apache-2.0</a></sub></p>
