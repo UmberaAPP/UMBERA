@@ -1,22 +1,15 @@
 # Notice
 
-Copyright © 2026 Umbera. All rights reserved except as granted by the
-[PolyForm Strict License 1.0.0](LICENSE.md).
+Umbera Core
+Copyright © 2026 Umbera (https://umbera.app)
 
-## What the license allows
-
-This repository is **source available** so that the security of Umbera can be independently reviewed.
-You may read, build and test the code, and use it for non-commercial research and evaluation.
-You may not use it in a product or service, modify it, create derivative works from it, or
-redistribute it.
-
-For any other use, including commercial licensing, contact **info@umbera.app**.
+This product is licensed under the [Apache License 2.0](LICENSE).
 
 ## Trademarks
 
 "Umbera", the Umbera name and the eclipse logo are trademarks of Umbera. The license does not
-grant any right to use them. Applications or services must not use the Umbera name or logo, or any
-confusingly similar mark, to identify themselves.
+grant any right to use them (Apache License 2.0, section 6). Applications or services built with this
+code must not use the Umbera name or logo, or any confusingly similar mark, to identify themselves.
 
 ## Third-party components
 

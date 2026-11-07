@@ -5,10 +5,10 @@
 </p>
 
 <p align="center">
-  <a href="LICENSE.md"><img alt="License: PolyForm Strict 1.0.0" src="https://img.shields.io/badge/license-PolyForm%20Strict%201.0.0-8b6cff?style=flat-square"></a>
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-8b6cff?style=flat-square"></a>
   <img alt="Rust" src="https://img.shields.io/badge/rust-1.85%2B-1f1d29?style=flat-square&logo=rust">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/kotlin-multiplatform-1f1d29?style=flat-square&logo=kotlin">
-  <img alt="Post-quantum" src="https://img.shields.io/badge/post--quantum-Kyber%20%C2%B7%20Dilithium-6aa0ff?style=flat-square">
+  <img alt="Post-quantum" src="https://img.shields.io/badge/post--quantum-ML--KEM%20%C2%B7%20ML--DSA-6aa0ff?style=flat-square">
   <img alt="Tests: 30 passing" src="https://img.shields.io/badge/tests-30%20passing-5fd3a1?style=flat-square">
 </p>
 
@@ -31,14 +31,15 @@
   <a href="core"><img alt="Rust core" src="https://img.shields.io/badge/Rust%20core-1f1d29?style=for-the-badge&logo=rust&logoColor=white"></a>
   <a href="kotlin"><img alt="Kotlin layer" src="https://img.shields.io/badge/Kotlin%20layer-1f1d29?style=for-the-badge&logo=kotlin&logoColor=white"></a>
   <a href="SECURITY.md"><img alt="Security" src="https://img.shields.io/badge/Security-1f1d29?style=for-the-badge"></a>
-  <a href="LICENSE.md"><img alt="License" src="https://img.shields.io/badge/License-1f1d29?style=for-the-badge"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-1f1d29?style=for-the-badge"></a>
 </p>
 
 ---
 
 **Umbera** is a private messenger built on one rule: *the server should never know who talks to whom.*
 This repository contains the code that enforces that rule — the cryptographic core that runs on every
-Umbera device. It is published so that anyone can read it, run its tests and check our claims.
+Umbera device. It is open source under the Apache License 2.0, so that anyone can read it, run its tests, check our
+claims and reuse it.
 
 > No phone number. No email. Post-quantum end-to-end encryption. Sealed sender.
 > A relay that moves padded ciphertext between rotating mailbox addresses and learns nothing else.
@@ -54,7 +55,8 @@ Umbera device. It is published so that anyone can read it, run its tests and che
 | [Repository layout](#repository-layout) | [Run the tests](docs/PROOF.md#run-it-yourself) | [Rendezvous addressing](docs/PROTOCOL.md#7-rendezvous-addressing) |
 | [Build and test](#build-and-test) | [Verify a call with Wireshark](docs/PROOF.md#verify-it-with-a-packet-capture) | [Groups: MLS](docs/PROTOCOL.md#12-groups-mls) |
 | [Security](#security) | [Report a flaw](docs/PROOF.md#found-a-flaw) | [Key transparency](docs/PROTOCOL.md#14-key-transparency) |
-| [Contact](#contact) | | [All sections](docs/PROTOCOL.md#contents) |
+| [Help us review it](#help-us-review-it) | | [All sections](docs/PROTOCOL.md#contents) |
+| [Contact](#contact) | | |
 | [License](#license) | | |
 
 ## Why this repository exists
@@ -183,6 +185,19 @@ published for review. See [kotlin/README.md](kotlin/README.md).
 
 Found a vulnerability? Please report it privately — see [SECURITY.md](SECURITY.md). We answer every report.
 
+## Help us review it
+
+**What is verified and what is not.** Every primitive has known-answer tests and the end-to-end tests above
+pass on every change. The protocol has **not yet had an independent third-party audit.** Until it has, treat
+it as reviewed by its authors and by whoever reads this code — and we would very much like that to be you.
+
+- **Cryptographers:** read [docs/PROTOCOL.md](docs/PROTOCOL.md) and try to break it. Private reports go to
+  [SECURITY.md](SECURITY.md); everyone who finds a real issue is credited there.
+- **Questions and ideas:** use [Discussions](https://github.com/UmberaAPP/UMBERA/discussions).
+- **Small, well-defined tasks:** see issues labelled
+  [good first issue](https://github.com/UmberaAPP/UMBERA/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+  Pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 <p align="right"><a href="#top">↑ Back to top</a></p>
 
 ## Contact
@@ -197,16 +212,13 @@ Found a vulnerability? Please report it privately — see [SECURITY.md](SECURITY
 
 ## License
 
-**Source available, not open source.** This code is published under the
-[PolyForm Strict License 1.0.0](LICENSE.md):
+**Open source.** The cryptographic core in this repository is licensed under the
+[Apache License 2.0](LICENSE): you may use, modify and redistribute it, including in commercial products,
+as long as you keep the copyright and license notices. The Umbera apps, server and billing are separate
+and are not part of this repository.
 
-| You may | You may not |
-|---|---|
-| read, study and audit the code | use it in a product or service |
-| build it and run the tests | modify it or create derivative works |
-| use it for non-commercial research and evaluation | redistribute it |
-
-"Umbera" and the eclipse logo are trademarks of Umbera. See [NOTICE.md](NOTICE.md).
+"Umbera" and the eclipse logo are trademarks of Umbera and are not covered by the license.
+See [NOTICE.md](NOTICE.md).
 
 <p align="right"><a href="#top">↑ Back to top</a></p>
 

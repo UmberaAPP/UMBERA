@@ -30,6 +30,20 @@ specification in [docs/PROTOCOL.md](docs/PROTOCOL.md).
 Out of scope: denial of service, social engineering, issues that require a compromised device
 operating system, and third-party services.
 
+## Review the cryptography
+
+We invite cryptographers and security researchers to review the protocol in
+[docs/PROTOCOL.md](docs/PROTOCOL.md) and the code in this repository. The protocol has not yet had an
+independent third-party audit, so every careful read helps. Interesting places to start: the hybrid
+X25519 + ML-KEM-1024 key agreement, sealed sender, rendezvous address rotation and message franking.
+
+There is **no paid bug bounty yet.** Every confirmed finding is credited below (with your name or
+handle, or anonymously if you prefer) and in the release notes.
+
+## Hall of Fame
+
+_No reports yet — your name could be the first._
+
 ## Safe harbour
 
 We will not pursue legal action against researchers who act in good faith, avoid privacy violations
