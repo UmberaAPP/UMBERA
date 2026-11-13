@@ -4,11 +4,15 @@
 
 # Umbera Protocol
 
-**Version 1** · applies to Umbera for Android and iOS
+**Version 1**, with the additions of Umbera 2.1.0 (Android, iOS) and Umbera Desktop 1.0.0 (Windows, macOS, Linux)
 
 This document describes how Umbera clients encrypt, address and deliver messages, and exactly what
 the relay server can and cannot observe. Every statement here can be checked against the code in
 [`core/`](../core) and [`kotlin/`](../kotlin).
+
+Sections 6, 7, 11 and 12 describe the version-1 formats and, under **2.1.0**, the newer formats that
+are used once both sides run 2.1.0 or Desktop 1.0.0. Every post-quantum mechanism, with code
+references and tests, is listed in [PQ_STATUS.md](PQ_STATUS.md).
 
 ## Contents
 
@@ -108,6 +112,10 @@ being useful after the next round-trip (break-in recovery). Old message keys are
 
 Source: [`DoubleRatchet.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt).
 
+**Post-quantum root key.** An ML-KEM-1024 shared secret is mixed into the root key on session start and again every 20
+new chains or every 24 h (ratchet version `root+mlkem1024`), so the root key also depends on a
+post-quantum secret. The 2.0.x apps speak the same ratchet version. Tests: Kotlin `PqRatchetTest`.
+
 ## 6. Sealed sender
 
 <p align="center"><img src="assets/sealed-sender.svg" alt="Sealed sender" width="100%"></p>
@@ -148,6 +156,15 @@ ephemeral key and ciphertext.
 
 Source: [`MessageEncryption.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MessageEncryption.kt).
 
+**2.1.0: envelope v3.** The full envelope v3 uses an ephemeral X25519 key and an ML-KEM-1024
+encapsulation, with HKDF salted by the transcript hash (both public keys and the KEM ciphertext), and
+AES-256-GCM. Between full envelopes, up to 49 short envelopes v3s (at most 24 h) use a fresh ephemeral
+X25519 key plus a one-way chain from the hybrid pair secret of the last confirmed full envelope.
+Rust and Kotlin produce identical bytes for the same inputs
+([`core/src/sealv3.rs`](../core/src/sealv3.rs), [`tests/vectors/seal-v3-vectors.txt`](../core/tests/vectors/seal-v3-vectors.txt)).
+
+Source: [`SealV3.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/SealV3.kt).
+
 ## 7. Rendezvous addressing
 
 <p align="center"><img src="assets/rendezvous.svg" alt="Rendezvous addressing" width="100%"></p>
@@ -167,6 +184,10 @@ rendezvous_id = hex(HKDF-SHA256(ikm  = shared,
 - Each direction has its own address (`from`/`to` are swapped for the reverse direction).
 - Addresses rotate every week; receivers poll the current and the previous epoch.
 - The relay cannot link two rendezvous IDs to the same person, nor tell which two people share one.
+
+**2.1.0.** Between two 2.1.0 apps, the address is derived from a direction secret of the hybrid v3
+exchange (X25519 + ML-KEM-1024) instead of the X25519 secret alone, and still changes every week at the
+same moment for everyone. Source: [`RendezvousV2.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/RendezvousV2.kt).
 
 ## 8. Reading a mailbox
 
@@ -228,21 +249,45 @@ Source: [`RendezvousPow.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/cry
 Source: [`FileEncryption.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/FileEncryption.kt),
 [`HybridFileKeyWrap.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/HybridFileKeyWrap.kt).
 
+**2.1.0: file wrap v2.** The file key is wrapped with X25519 + ML-KEM-1024 bound to the transcript of the
+exchange, like envelope v3. Source: [`SealV3.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/SealV3.kt).
+
 ## 12. Groups: MLS
 
-Groups use the Messaging Layer Security protocol (RFC 9420) through OpenMLS.
+Groups use the Messaging Layer Security protocol (RFC 9420) through OpenMLS 0.9.2.
 
 | Parameter | Value |
 |---|---|
-| Ciphersuite | `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519` |
-| Max members | 20 |
+| Ciphersuite, new groups | `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519` (0x004D): X-Wing KEM = X25519 + ML-KEM-768 |
+| Ciphersuite, groups with a 2.0.x member | `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519` (0x0001) |
+| Max members | 20 people |
+| Max leaves | 20 while any leaf runs the previous core; 100 (20 people × phone + 4 computers) once every leaf announces `0xF0D1` |
+| Capability labels (RFC 9420 private range) | `0xF0D1` linked devices, `0xF0D2` X-Wing support |
+
+New groups are created on X-Wing. Support is decided by the `0xF0D2` label in a member's leaf
+capabilities, not by the suite list (the previous core lists 0x004D without supporting it); a group that
+includes a member without the label stays on 0x0001. An existing group moves to X-Wing by itself once every
+member supports it, keeping the same group, members, history and each member's leaf signature key.
+The X-Wing KEM comes from `openmls_libcrux_crypto`; every other primitive of both suites runs on
+RustCrypto ([`provider.rs`](../core/src/provider.rs)). The stored state format is unchanged from the
+previous core, and [`tests/compat_v06.rs`](../core/tests/compat_v06.rs) runs the new core against the
+previous one (OpenMLS 0.6) in mixed groups.
+
+On top of MLS, the app signs every Commit, Proposal and Welcome with ML-DSA-65 and protects application
+messages with a per-sender hash chain and an ML-DSA-65 checkpoint
+([`GroupPqSig.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/GroupPqSig.kt)). Each device
+refreshes its own leaf every 7 days, after 100 own packets or after a long idle period
+([`GroupRekeyPolicy.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/mls/GroupRekeyPolicy.kt)).
 
 The relay has no concept of a group: group messages are fanned out to the members' pairwise rendezvous
 addresses. The member cap is therefore enforced **cryptographically by every client** — an honest
 client refuses to merge a commit that would exceed it, so a malicious admin cannot force extra members
-onto other devices. Call media keys are derived from the group with MLS `export_secret`.
+onto other devices.
 
-Source: [`lib.rs`](../core/src/lib.rs), [`MlsEngine.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MlsEngine.kt).
+Source: [`lib.rs`](../core/src/lib.rs), [`provider.rs`](../core/src/provider.rs),
+[`MlsManager.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/mls/MlsManager.kt),
+[`MlsEngine.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MlsEngine.kt).
+The full list of post-quantum mechanisms is in [PQ_STATUS.md](PQ_STATUS.md).
 
 ## 13. Abuse reports: message franking
 

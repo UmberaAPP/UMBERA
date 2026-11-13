@@ -56,6 +56,7 @@ from the recipient's private keys, which are generated on the recipient's phone 
 |---|---|---|
 | Ratchet encryption | [`DoubleRatchet.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt) | message keys derived and discarded on the device |
 | Sealing to the recipient | [`MessageEncryption.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MessageEncryption.kt) | `createSealedSenderHybridPQ`: fresh ephemeral key per message, Kyber encapsulation, AES-256-GCM |
+| Envelope v3 (2.1.0) | [`SealV3.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/SealV3.kt) | full envelope: ephemeral X25519 + ML-KEM-1024, HKDF salted with the transcript hash; short envelopes chained from the last full one |
 | Combining both secrets | [`HybridKeyExchange.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/HybridKeyExchange.kt) | X25519 and Kyber secrets fed into one HKDF |
 | Primitives | [`primitives.rs`](../core/src/primitives.rs) | ML-KEM-1024, ML-DSA-65, X25519, AES-256-GCM from RustCrypto and dalek |
 | Mailbox addresses | [`MessageEncryption.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MessageEncryption.kt) | `rendezvousIdEpoch`: derived from the two peers' shared secret |
@@ -72,7 +73,7 @@ and timestamps. There is no sender field, no recipient field and no account iden
 ```bash
 git clone https://github.com/UmberaAPP/UMBERA
 cd UMBERA/core
-cargo test
+cargo test --release
 ```
 
 The test suite checks every primitive against known-answer vectors and runs ML-KEM-1024 and ML-DSA-65
@@ -117,9 +118,13 @@ Kyber key.
 - Every member checks the member cap on incoming Commits, not only the admin
   (`member_cap_enforced_at_crypto_layer` in `src/lib.rs`), and every application message carries the
   authenticated sender identity (`application_messages_carry_the_authenticated_sender`).
-- Ciphersuite: `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`. **Groups are not post-quantum yet** — the
-  hybrid ML-KEM protection described above covers 1:1 messages. We will move groups to a post-quantum or
-  hybrid MLS ciphersuite once one is standardised and available in OpenMLS.
+- Ciphersuite: new groups use `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519` (0x004D), whose KEM is
+  X-Wing = X25519 + ML-KEM-768, on OpenMLS 0.9.2. An existing group moves to X-Wing by itself once every
+  member runs 2.1.0 or Desktop 1.0.0. A group that includes a 2.0.x member stays on
+  `MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519`, and every group packet still travels to each member
+  inside that member's hybrid X25519 + ML-KEM-1024 envelope.
+- Every Commit, Proposal and Welcome also carries an ML-DSA-65 signature
+  ([`GroupPqSig.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/GroupPqSig.kt)), and each device refreshes its own leaf every 7 days.
 
 ### Run it yourself
 
@@ -143,6 +148,17 @@ test result: ok. 6 passed; 0 failed
 `an_outsider_cannot_read_it` even gives the outsider her own group under the very same group id —
 she still cannot decrypt the real group's messages.
 
+The X-Wing groups, the move of an existing group to X-Wing and the compatibility with the previous core
+have their own tests:
+
+```bash
+cargo test --release --lib xwing_                  # X-Wing groups
+cargo test --release --lib regroup_to_xwing_keeps_leaf_signature_keys
+cargo test --release --test xwing_short_key        # malformed and short X-Wing keys are rejected
+cargo test --release --test pcs_rekey              # recovery after a compromise, both suites
+cargo test --release --test compat_v06             # new core against the previous core (OpenMLS 0.6)
+```
+
 ---
 
 ## 3. Calls
@@ -164,7 +180,12 @@ she still cannot decrypt the real group's messages.
   signature does not match the caller's key (`decryptMessageRaw` in
   [`MessageEncryption.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/MessageEncryption.kt)
   throws `Invalid message signature`).
-- Group calls connect participants directly to each other. There is no server that mixes or decodes media.
+- Since 2.1.0 and Desktop 1.0.0, every audio and video frame (and screen sharing) is encrypted a second
+  time, in addition to DTLS-SRTP, with keys from a fresh X25519 + ML-KEM-1024 exchange for each call, carried in
+  the end-to-end encrypted call setup. Code: [`core/src/callkey.rs`](../core/src/callkey.rs) and
+  [`CallFrameE2ee.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/webrtc/CallFrameE2ee.kt). With a 2.0.x peer the call runs on DTLS-SRTP alone.
+- Group calls connect participants directly to each other, and each pair runs its own exchange. There is
+  no server that mixes or decodes media.
 
 ### Verify it with a packet capture
 
