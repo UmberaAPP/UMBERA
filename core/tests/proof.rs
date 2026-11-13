@@ -12,7 +12,7 @@ const INFO: &[u8] = b"key-derivation";
 
 fn random<const N: usize>() -> Vec<u8> {
     let mut b = [0u8; N];
-    getrandom::getrandom(&mut b).unwrap();
+    getrandom::fill(&mut b).unwrap();
     b.to_vec()
 }
 
