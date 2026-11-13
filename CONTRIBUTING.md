@@ -7,10 +7,11 @@ Thank you for helping make Umbera's cryptography better.
 ```bash
 git clone https://github.com/UmberaAPP/UMBERA.git
 cd UMBERA/core
-cargo test
+cargo test --release
 ```
 
-You need a stable Rust toolchain (1.85 or newer). Fuzzing needs nightly and `cargo-fuzz`:
+You need a stable Rust toolchain (1.91 or newer). The Go reference in `communities/pqc` needs Go 1.27
+(`go test ./...`). Fuzzing needs nightly and `cargo-fuzz`:
 
 ```bash
 cargo install cargo-fuzz
@@ -20,7 +21,7 @@ cd core/fuzz && cargo +nightly fuzz run amf_parse
 ## Pull requests
 
 - Keep changes small and focused; one topic per pull request.
-- Add or update tests for any behaviour you change. `cargo test` must pass.
+- Add or update tests for any behaviour you change. `cargo test --release` must pass.
 - Do not change wire formats or domain-separation labels without discussing it first in an issue —
   the apps depend on them byte for byte (see [docs/PROTOCOL.md](docs/PROTOCOL.md)).
 - By submitting a pull request you agree that your contribution is licensed under the

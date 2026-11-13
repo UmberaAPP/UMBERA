@@ -24,8 +24,10 @@ Please do **not** open a public issue for security problems.
 
 ## Scope
 
-In scope: everything in this repository — the Rust core, the Kotlin protocol layer and the protocol
-specification in [docs/PROTOCOL.md](docs/PROTOCOL.md).
+In scope: everything in this repository — the Rust core, the Kotlin protocol layer, the Communities
+cryptography (`communities/`), the protocol specification in [docs/PROTOCOL.md](docs/PROTOCOL.md) and
+the post-quantum status in [docs/PQ_STATUS.md](docs/PQ_STATUS.md). A case where the code does less than
+PQ_STATUS.md says is a security report.
 
 Out of scope: denial of service, social engineering, issues that require a compromised device
 operating system, and third-party services.
@@ -35,7 +37,8 @@ operating system, and third-party services.
 We invite cryptographers and security researchers to review the protocol in
 [docs/PROTOCOL.md](docs/PROTOCOL.md) and the code in this repository. The protocol has not yet had an
 independent third-party audit, so every careful read helps. Interesting places to start: the hybrid
-X25519 + ML-KEM-1024 key agreement, sealed sender, rendezvous address rotation and message franking.
+X25519 + ML-KEM-1024 key agreement, envelope v3, the X-Wing MLS groups, the call frame keys, linking a
+computer by QR code, sealed sender, rendezvous address rotation and message franking.
 
 There is **no paid bug bounty yet.** Every confirmed finding is credited below (with your name or
 handle, or anonymously if you prefer) and in the release notes.

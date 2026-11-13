@@ -6,10 +6,10 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-8b6cff?style=flat-square"></a>
-  <img alt="Rust" src="https://img.shields.io/badge/rust-1.85%2B-1f1d29?style=flat-square&logo=rust">
+  <img alt="Rust" src="https://img.shields.io/badge/rust-1.91%2B-1f1d29?style=flat-square&logo=rust">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/kotlin-multiplatform-1f1d29?style=flat-square&logo=kotlin">
   <img alt="Post-quantum" src="https://img.shields.io/badge/post--quantum-ML--KEM%20%C2%B7%20ML--DSA-6aa0ff?style=flat-square">
-  <img alt="Tests: 36 passing" src="https://img.shields.io/badge/tests-36%20passing-5fd3a1?style=flat-square">
+  <img alt="Tests: 114 passing" src="https://img.shields.io/badge/tests-114%20passing-5fd3a1?style=flat-square">
 </p>
 
 <p align="center">
@@ -49,7 +49,7 @@ claims and reuse it.
 
 | This page | Proof | Protocol specification |
 |---|---|---|
-| [Why this repository exists](#why-this-repository-exists) | [The claims](docs/PROOF.md#the-claims) | [What the relay sees](docs/PROTOCOL.md#2-what-the-relay-sees) |
+| [Why this repository exists](#why-this-repository-exists) · [Post-quantum status](#post-quantum-status-210--desktop-100) | [The claims](docs/PROOF.md#the-claims) | [What the relay sees](docs/PROTOCOL.md#2-what-the-relay-sees) |
 | [Architecture](#architecture) | [Assumptions](docs/PROOF.md#assumptions) | [Hybrid key agreement](docs/PROTOCOL.md#4-hybrid-key-agreement) |
 | [How a message travels](#how-a-message-travels) | [Messages](docs/PROOF.md#1-messages) · [Groups](docs/PROOF.md#2-group-chats) | [Double Ratchet](docs/PROTOCOL.md#5-one-to-one-sessions-double-ratchet) |
 | [Cryptographic primitives](#cryptographic-primitives) | [Calls](docs/PROOF.md#3-calls) | [Sealed sender](docs/PROTOCOL.md#6-sealed-sender) |
@@ -72,7 +72,9 @@ the server can or cannot learn lives on the device, and that code is here:
 | **1:1 sessions** | Double Ratchet: forward secrecy and break-in recovery for every conversation. |
 | **Sealed sender** | The sender's identity is encrypted inside the message, never visible to the relay. |
 | **Rendezvous** | Mailbox addresses derived by both peers from a shared secret, rotated weekly. |
-| **Groups** | MLS (RFC 9420) with a cryptographically enforced member cap. |
+| **Groups** | MLS (RFC 9420) with the X-Wing cipher suite (X25519 + ML-KEM-768), ML-DSA-65 signed commits and a cryptographically enforced member cap. |
+| **Calls** | A second layer on every call frame with keys from an X25519 + ML-KEM-1024 exchange per call, in addition to WebRTC's DTLS-SRTP. |
+| **Linked devices** | A computer is linked to the phone by QR code with X25519 + ML-KEM-1024 session keys and a certificate signed with secp256k1 and ML-DSA-65. |
 | **Abuse reports** | Asymmetric message franking: a recipient can prove to a moderator who sent an abusive message, while the relay never reads traffic. |
 | **Attachments** | A fresh key per file, a derived key per 256 KiB chunk, encrypted metadata. |
 | **Key transparency** | Merkle inclusion proofs that let clients detect a server substituting someone's keys. |
@@ -82,14 +84,41 @@ guarantees above, because the relay only ever handles data that this code has al
 
 <p align="right"><a href="#top">↑ Back to top</a></p>
 
+## Post-quantum status (2.1.0 / Desktop 1.0.0)
+
+Umbera 2.1.0 (Android, iOS) and Umbera Desktop 1.0.0 (Windows, macOS, Linux) combine a classical algorithm
+with a NIST post-quantum algorithm in every end-to-end layer: 1:1 envelopes and file keys
+(X25519 + ML-KEM-1024), group key schedule (MLS with X-Wing, X25519 + ML-KEM-768), group commits
+(ML-DSA-65), a second encryption layer on call frames (X25519 + ML-KEM-1024 per call), linking a computer
+by QR code, messages between linked devices, and Communities. Each mechanism, its code (file and line)
+and the test that checks it are listed in [**docs/PQ_STATUS.md**](docs/PQ_STATUS.md); the changes of this
+release are in [CHANGELOG.md](CHANGELOG.md).
+
+Check it yourself:
+
+```bash
+cd core
+cargo test --release                                  # whole Rust suite
+cargo test --release --lib xwing_                     # X-Wing groups
+cargo test --release --test compat_v06                # new core against the previous core (OpenMLS 0.6)
+cargo test --release --lib callkey::                  # call frame keys
+cargo test --release --lib devlink::                  # QR linking, device certificates
+cargo test --release --lib sealv3::                   # envelope v3 vectors shared with Kotlin
+
+cd ../communities/pqc
+go test -v ./...                                      # Communities vectors (Go reference)
+```
+
+<p align="right"><a href="#top">↑ Back to top</a></p>
+
 ## Architecture
 
 <p align="center">
   <img src="docs/assets/architecture.svg" alt="Architecture: apps, protocol layer, Rust core, blind relay" width="100%">
 </p>
 
-The Rust crate in [`core/`](core) is compiled once and shared by Android and iOS through
-[UniFFI](https://github.com/mozilla/uniffi-rs). The protocol layer in [`kotlin/`](kotlin) is Kotlin
+The Rust crate in [`core/`](core) is compiled once and shared by Android, iOS and the desktop app
+through [UniFFI](https://github.com/mozilla/uniffi-rs). The protocol layer in [`kotlin/`](kotlin) is Kotlin
 Multiplatform code built on top of it.
 
 <p align="right"><a href="#top">↑ Back to top</a></p>
@@ -137,19 +166,35 @@ ML-KEM and ML-DSA are the NIST-standardised versions of CRYSTALS-Kyber (FIPS 203
 
 ```
 umbera-core/
-├── core/                      Rust crate: primitives, MLS engine, message franking
+├── core/                      Rust crate: primitives, MLS engine, device linking, call keys, franking
 │   ├── src/
 │   │   ├── primitives.rs      ML-KEM, ML-DSA, X25519, Ed25519, secp256k1, AES-GCM, KDFs
-│   │   ├── lib.rs             MLS group engine exposed over UniFFI
+│   │   ├── lib.rs             MLS group engine exposed over UniFFI (X-Wing and the previous suite)
+│   │   ├── provider.rs        OpenMLS crypto provider with the X-Wing KEM
+│   │   ├── callkey.rs         X25519 + ML-KEM-1024 call frame keys
+│   │   ├── sealv3.rs          envelope v3 known-answer vectors (test only)
+│   │   ├── devlink/           linking a computer by QR code, device certificates, transfer package
 │   │   ├── amf.rs             asymmetric message franking
 │   │   └── pdf.rs             metadata removal for outgoing PDF files
+│   ├── tests/                 proofs, compatibility with the previous core, vectors
 │   └── fuzz/                  cargo-fuzz targets
 ├── kotlin/                    protocol layer (Kotlin Multiplatform)
-│   └── src/commonMain/kotlin/app/umbera/core/
-│       ├── crypto/            sealed sender, ratchet, files, rendezvous, key transparency
-│       └── util/              small helpers used by the protocol code
+│   └── src/
+│       ├── commonMain/kotlin/app/umbera/core/
+│       │   ├── crypto/        envelopes, ratchet, files, rendezvous, groups, safety number
+│       │   ├── devices/       envelopes and addresses between linked devices
+│       │   ├── meet/          meetings by link
+│       │   ├── webrtc/        call frame encryption
+│       │   └── util/          small helpers used by the protocol code
+│       ├── desktopMain/       desktop call frame encryptor
+│       └── commonTest/, desktopTest/   tests, published for review
+├── communities/               Communities cryptography
+│   ├── src/                   Kotlin client code
+│   └── pqc/                   Go reference with known-answer vectors
 └── docs/
     ├── PROTOCOL.md            protocol specification
+    ├── PROOF.md               claims and how to check them
+    ├── PQ_STATUS.md           post-quantum status, code and tests
     └── assets/                diagrams
 ```
 
@@ -157,25 +202,38 @@ umbera-core/
 
 ## Build and test
 
-The Rust core builds and tests on any platform with a stable toolchain:
+The Rust core builds and tests on any platform with a stable toolchain (Rust 1.91 or newer):
 
 ```bash
 cd core
-cargo test
+cargo test --release
 ```
 
 ```
-test result: ok. 23 passed; 0 failed
-test result: ok. 7 passed; 0 failed     (tests/proof.rs)
-test result: ok. 6 passed; 0 failed     (tests/proof_groups.rs)
+test result: ok. 63 passed; 0 failed     (unit tests: primitives, MLS, X-Wing, call keys, device linking, envelope v3)
+test result: ok. 21 passed; 0 failed     (tests/compat_v06.rs: new core against the previous core)
+test result: ok. 1 passed; 0 failed      (tests/golden_primitives.rs)
+test result: ok. 9 passed; 0 failed      (tests/pcs_rekey.rs)
+test result: ok. 4 passed; 0 failed      (tests/pq_small_stack.rs)
+test result: ok. 7 passed; 0 failed      (tests/proof.rs)
+test result: ok. 6 passed; 0 failed      (tests/proof_groups.rs)
+test result: ok. 3 passed; 0 failed      (tests/xwing_short_key.rs)
 ```
 
 The tests include known-answer vectors for every primitive and end-to-end checks of ML-KEM-1024 and
-ML-DSA-65 key generation, encapsulation, signing and verification. To fuzz the franking parser:
+ML-DSA-65 key generation, encapsulation, signing and verification. The Communities vectors are checked
+by the Go reference (Go 1.27):
+
+```bash
+cd communities/pqc
+go test ./...
+```
+
+To fuzz the parsers (franking, MLS Welcome and incoming messages, device linking, call keys, PDF):
 
 ```bash
 cargo install cargo-fuzz
-cd core/fuzz && cargo +nightly fuzz run amf_parse
+cd core/fuzz && cargo +nightly fuzz run amf_parse      # or mls_welcome, mls_incoming, devlink, callkey, pdf_strip
 ```
 
 The Kotlin sources in [`kotlin/`](kotlin) are the protocol layer exactly as it ships in the apps and are
