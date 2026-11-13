@@ -1,0 +1,25 @@
+# Known-answer vectors for the 1:1 v3 / v3s envelope and the v2 file key.
+# Inputs: eph[i]=i+1 (32), ct[i]=i*7+3 (1568), rcpt_x[i]=0x40+i (32), rcpt_ek[i]=i*13+5 (1568),
+#        ss_X25519[i]=0x80+i (32), ss_ML-KEM[i]=0xC0+i (32); bytes modulo 256.
+# Source of truth — Rust core/src/sealv3.rs (sha2 + hkdf); Kotlin SealV3Test.katMatchesRust — the same lines.
+KAT_TH = "3a83de5db60910cb810c32de542789131ee091507625fd39d8ff830fff6f0fa9"
+KAT_OKM = "80ad60792e211124b3fe2bc7f2e8a463f346c6b1b9c8a53b82ce9ed5cc974e7198d2c97e0b8165fcc3d17590fcf416dd7daee5d5f68846c6dbca604bd88a5f11"
+KAT_PAIR = "9d60f5ae438592cef60d9af88b651d8f4cccaca766596c505c197ae3bd3d8489"
+KAT_PAIR_ID = "9b52dc7d1d6d6057"
+KAT_MK0 = "2c33ca67e0fff3215bd80c45d82559aea88b1c7d9097750eb292966c28ef2486"
+KAT_CK1 = "67b591662d045c8ac71b5782704cca815a30f7f9156bc103636a05ef16fb3530"
+KAT_HINT0 = "ccef588f95b87a77"
+KAT_SHORT0 = "1f73ff6acb06c058f7f2102245c7e7f90eb32ba72d27a181d097d6cb1ea11290"
+KAT_FILE = "e7e71302413123da4d536b9feca033c128ed817d85aab00d3853e355fe8972ef"
+# Direction secret (info umbera-rendezvous-v2/dir) and rid2(alice→bob) = HKDF(ss_X ‖ D, "umbera-rendezvous-v2", "rdv|alice|bob").
+KAT_DIR = "3303811545f9fe75256e6fb7a619a21cf64039e9f41d003eb3f0b0a1a9e70516"
+KAT_RID2 = "3c4fde7e0333e6547f80df5a04fb39261e4c2751eba39959b499518af147e73c"
+# Address rotation: rid2e(alice→bob, epoch 2915) = HKDF(ss_X ‖ D, "umbera-rendezvous-v2", "rdv-e|alice|bob|2915"); own copy in the same epoch = HKDF(ss_X ‖ ss_K, …, "rdv-backup-e|alice|bob|2915").
+KAT_RID2E = "893a8ce4da5b1b4c1c192b27f33205e4527ad9cd9dfd0b339620c3b683939569"
+KAT_SELF_E = "0909952d1c44f39ab1b094b4be914347f5be0ac7eafbcbb27c37a80b5958e9f3"
+# Static path hybrid-pq-v3 — TH(label umbera-hybrid-static-v3/transcript; eph acting as the sender's static X25519), OKM(info typex-hybrid-v2/static, 64).
+KAT_STATIC_TH = "901d6a1ccea60c9e620db5a50d6b762b96a2748c5c1cdfdc43078b1f4f343261"
+KAT_STATIC_OKM = "dc9a606428f88ba85e55619239af100497dde757e6e5050d2cb587be40ebc097ce0927852cefa82fb5fbd02fbae8b31e2f36bf6668bea9cbddf3c5835e7a259a"
+# Device address epochs: recipient address secret R = HKDF(ML-KEM seed = input ss_ML-KEM, "umbera-dv1/rx", "dv-rx|alice/primary|bob/pc1"); device-pair address for epoch 2915 = HKDF(ss_X ‖ R, "umbera-dv1/rid-e", "rdv-e|alice/primary|bob/pc1|2915").
+KAT_DV_RX = "65bdece41503b6248a5229e017fd2662db67118aafefdfb90229dab80837456e"
+KAT_DV_RIDE = "4b3b11d2255cca9d86f97135f5f87c0d837ce65a7c8d26fa4a37b5d00c83d7c3"
