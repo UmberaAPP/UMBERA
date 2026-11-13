@@ -20,4 +20,39 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "mls_welcome"
+path = "fuzz_targets/mls_welcome.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "mls_incoming"
+path = "fuzz_targets/mls_incoming.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "pdf_strip"
+path = "fuzz_targets/pdf_strip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "devlink"
+path = "fuzz_targets/devlink.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "callkey"
+path = "fuzz_targets/callkey.rs"
+test = false
+doc = false
+bench = false
+
 [workspace]
