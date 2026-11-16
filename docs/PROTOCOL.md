@@ -217,6 +217,10 @@ Payloads are padded to size buckets before delivery so that message length leaks
 | ≤ 16 KiB | 16 KiB |
 | larger | next multiple of 4 KiB |
 
+When several envelopes are sent in one burst (for example to the members of a group), a sender may pad
+an envelope to the *next* bucket instead (`pad(payload, bump = true)`), so a burst does not consist of
+envelopes of one size. The format is unchanged; `unpad` on older clients reads it the same way.
+
 Source: [`RendezvousPadding.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/RendezvousPadding.kt).
 
 ## 10. Proof of work
@@ -229,7 +233,9 @@ challenge = rid || ":" || hex(SHA-256(payload))
 find stamp such that SHA-256(challenge || ":" || stamp) has ≥ 15 leading zero bits   // default difficulty
 ```
 
-This costs a phone a fraction of a second per message and makes bulk spam expensive.
+This costs a phone a fraction of a second per message and makes bulk spam expensive. The search hashes the
+fixed prefix once and only the last block per attempt (`Sha256Pure.solveDecimalSuffix`); the stamp and the
+check are unchanged.
 
 Source: [`RendezvousPow.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/RendezvousPow.kt).
 
@@ -318,6 +324,21 @@ node = SHA-256(0x01 || left || right)
 
 Clients verify an inclusion proof against a signed tree head (Ed25519) before trusting new keys and
 warn the user if a contact's keys change unexpectedly.
+
+```
+sth_message    = "KT-STH-v1|" tree_size "|" root_hash "|" timestamp                      // Ed25519
+sth_pq_message = "KT-STH-PQ-v1|" tree_size "|" root_hash "|" timestamp "|" ed25519_pub     // ML-DSA-65
+```
+
+A tree head may also carry an ML-DSA-65 co-signature over `sth_pq_message`, which binds it to the Ed25519
+key. When present it is verified; once a client has pinned the ML-DSA-65 key of the log, a tree head
+without a valid co-signature from that key is rejected. A tree head without a co-signature is accepted
+only while no ML-DSA-65 key is pinned.
+
+A claim that a contact has no entry in the log is accepted only as a signed absence statement
+(`"KT-ABSENT-v1|" user_id "|" tree_size "|" root_hash "|" created_at_ms "|" timestamp`, Ed25519, with an
+optional ML-DSA-65 co-signature over the `KT-ABSENT-PQ-v1` form that also includes the Ed25519 key). It is
+checked against the asked user ID and the pinned log keys in the same way.
 
 Source: [`KeyTransparencyVerifier.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/KeyTransparencyVerifier.kt).
 
