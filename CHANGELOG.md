@@ -1,5 +1,32 @@
 # Changelog
 
+## umbera-core 1.1.0 (crates.io) and protocol sources — 16 November 2026
+
+### Rust crate `umbera-core` 1.1.0
+- Same code as `core/` in this repository, now also on crates.io (1.0.0 there was the previous core on
+  OpenMLS 0.6). The public API of 1.0.0 is unchanged; everything below is additive.
+- MLS on OpenMLS 0.9.2 with the X-Wing cipher suite `MLS_256_XWING_CHACHA20POLY1305_SHA256_Ed25519`
+  (`create_group_for`, `mls_suite_xwing`, `mls_suite_legacy`); `create_group` keeps the previous suite.
+  Stored state stays compatible with 1.0.0 (`tests/compat_v06.rs`).
+- New modules: `devlink` (linking a computer by QR code, device certificates, transfer package, MLS leaf of
+  the linked device), `callkey` (per-call X25519 + ML-KEM-1024 frame keys), `provider` (crypto provider with
+  the X-Wing KEM).
+- Tests: known-answer vectors for envelope v3 / file wrap v2 and device mailbox epochs, shared with Kotlin.
+- Minimum Rust version: 1.91 (was 1.85).
+
+### Kotlin protocol sources (`kotlin/`)
+- `MessageEncryption.kt` brought up to date with the shipping apps: envelope v3 / v3s, capability bits
+  (`wireCaps`), weekly mailbox addresses and their receive plan, pair-state reset handling, `callsig-v2`.
+  The previous copy in this repository predated these and did not match the published tests.
+- `SafetyNumber.kt`: `markVerified` — marking a contact as verified pins the keys the shown number was
+  computed from, and only if they still give the same fingerprint.
+- `HybridFileKeyWrap.kt`: file wrap v2 (transcript-bound X25519 + ML-KEM-1024), as described in PROTOCOL.md.
+- `KeyTransparencyVerifier.kt`: optional ML-DSA-65 co-signature on tree heads and signed absence statements
+  (PROTOCOL.md, Section 14).
+- `RendezvousPadding.kt`: optional padding to the next bucket for bursts; `RendezvousPow.kt` and
+  `Sha256Pure.kt`: faster proof-of-work search, same format.
+- No wire format changes.
+
 ## Umbera 2.1.0 (Android, iOS) and Umbera Desktop 1.0.0 (Windows, macOS, Linux) — 13 November 2026
 
 ### Desktop app
