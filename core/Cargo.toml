@@ -1,6 +1,6 @@
 [package]
 name = "umbera-core"
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 rust-version = "1.91"
 description = "Umbera cryptographic core: post-quantum primitives, MLS group messaging (X-Wing), device linking, call frame keys, message franking."
