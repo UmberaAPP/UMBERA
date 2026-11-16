@@ -187,6 +187,20 @@ object SafetyNumber {
     fun acknowledge(store: SecureKeyStoreCommon, userId: String, sn: ScreenNumber) =
         store.saveLastSafetyNumber(userId, "${sn.pair.version}:${sn.pair.number}")
 
+    /**
+     * "Mark as verified": the keys [sn] was computed from become the trusted pin, which also lifts a
+     * "key changed" block on messages and calls. Keys are accepted only if they still give the same
+     * fingerprint as the number on the screen.
+     */
+    fun markVerified(store: SecureKeyStoreCommon, userId: String, sn: ScreenNumber, secp256k1Hex: String, x25519B64: String) {
+        store.saveVerifiedContact(userId, sn.peerFingerprint)
+        acknowledge(store, userId, sn)
+        val now = forScreen(store, userId, secp256k1Hex, x25519B64) ?: return
+        if (now.peerFingerprint != sn.peerFingerprint) return
+        val k = peerKeys(secp256k1Hex, x25519B64, null, null) ?: return
+        store.acceptPeerKey(userId, k.secp256k1, k.x25519)
+    }
+
     private fun lenBE(n: Int) = byteArrayOf((n ushr 24).toByte(), (n ushr 16).toByte(), (n ushr 8).toByte(), n.toByte())
 
     private fun hexOrNull(h: String?): ByteArray? {

@@ -4,20 +4,18 @@ package app.umbera.core.crypto
 
 object RendezvousPadding {
     private const val TAG = "P1:"
-
     private val buckets = longArrayOf(1024, 2048, 4096, 8192, 16384)
     private const val stepAbove = 4096L
-
     private fun bucketFor(len: Long): Long {
         for (b in buckets) if (len <= b) return b
-
         return ((len + stepAbove - 1) / stepAbove) * stepAbove
     }
 
-    fun pad(payload: String): String {
+    fun pad(payload: String, bump: Boolean = false): String {
         val header = TAG + payload.length.toString() + ":"
         val body = header + payload
-        val target = bucketFor(body.length.toLong()).toInt()
+        val exact = bucketFor(body.length.toLong())
+        val target = (if (bump) bucketFor(exact + 1) else exact).toInt()
         if (body.length >= target) return body
         val sb = StringBuilder(target)
         sb.append(body)

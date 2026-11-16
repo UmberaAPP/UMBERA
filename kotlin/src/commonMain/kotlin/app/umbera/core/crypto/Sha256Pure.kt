@@ -13,17 +13,14 @@ internal object Sha256Pure {
         0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
         0x748f82ee, 0x78a5636f, -0x7b3787ec, -0x7338fdf8, -0x6f410006, -0x5baf9315, -0x41065c09, -0x398e870e,
     )
-
     fun hash(data: ByteArray): ByteArray {
         var h0 = 0x6a09e667; var h1 = -0x4498517b; var h2 = 0x3c6ef372; var h3 = -0x5ab00ac6
         var h4 = 0x510e527f; var h5 = -0x64fa9774; var h6 = 0x1f83d9ab; var h7 = 0x5be0cd19
-
         val bitLen = data.size.toLong() * 8
         val padded = ByteArray(((data.size + 9 + 63) / 64) * 64)
         data.copyInto(padded)
         padded[data.size] = 0x80.toByte()
         for (i in 0 until 8) padded[padded.size - 1 - i] = ((bitLen ushr (8 * i)) and 0xFF).toByte()
-
         val w = IntArray(64)
         var off = 0
         while (off < padded.size) {
@@ -39,7 +36,6 @@ internal object Sha256Pure {
                 val s1 = (w[i - 2] rotr 17) xor (w[i - 2] rotr 19) xor (w[i - 2] ushr 10)
                 w[i] = w[i - 16] + s0 + w[i - 7] + s1
             }
-
             var a = h0; var b = h1; var c = h2; var d = h3
             var e = h4; var f = h5; var g = h6; var h = h7
             for (i in 0 until 64) {
@@ -55,7 +51,6 @@ internal object Sha256Pure {
             h0 += a; h1 += b; h2 += c; h3 += d; h4 += e; h5 += f; h6 += g; h7 += h
             off += 64
         }
-
         val out = ByteArray(32)
         intArrayOf(h0, h1, h2, h3, h4, h5, h6, h7).forEachIndexed { i, v ->
             out[i * 4] = (v ushr 24).toByte()
@@ -65,6 +60,74 @@ internal object Sha256Pure {
         }
         return out
     }
-
     private infix fun Int.rotr(bits: Int): Int = (this ushr bits) or (this shl (32 - bits))
+
+    private fun compress(st: IntArray, block: ByteArray, off: Int, w: IntArray) {
+        for (i in 0 until 16) {
+            val j = off + i * 4
+            w[i] = ((block[j].toInt() and 0xFF) shl 24) or
+                ((block[j + 1].toInt() and 0xFF) shl 16) or
+                ((block[j + 2].toInt() and 0xFF) shl 8) or
+                (block[j + 3].toInt() and 0xFF)
+        }
+        for (i in 16 until 64) {
+            val s0 = (w[i - 15] rotr 7) xor (w[i - 15] rotr 18) xor (w[i - 15] ushr 3)
+            val s1 = (w[i - 2] rotr 17) xor (w[i - 2] rotr 19) xor (w[i - 2] ushr 10)
+            w[i] = w[i - 16] + s0 + w[i - 7] + s1
+        }
+        var a = st[0]; var b = st[1]; var c = st[2]; var d = st[3]
+        var e = st[4]; var f = st[5]; var g = st[6]; var h = st[7]
+        for (i in 0 until 64) {
+            val s1 = (e rotr 6) xor (e rotr 11) xor (e rotr 25)
+            val ch = (e and f) xor (e.inv() and g)
+            val t1 = h + s1 + ch + K[i] + w[i]
+            val s0 = (a rotr 2) xor (a rotr 13) xor (a rotr 22)
+            val maj = (a and b) xor (a and c) xor (b and c)
+            val t2 = s0 + maj
+            h = g; g = f; f = e; e = d + t1
+            d = c; c = b; b = a; a = t1 + t2
+        }
+        st[0] += a; st[1] += b; st[2] += c; st[3] += d; st[4] += e; st[5] += f; st[6] += g; st[7] += h
+    }
+    fun solveDecimalSuffix(prefix: ByteArray, bits: Int, start: Long, maxIterations: Long): Long {
+        require(start >= 0) { "start must be non-negative" }
+        val w = IntArray(64)
+        val mid = intArrayOf(0x6a09e667, -0x4498517b, 0x3c6ef372, -0x5ab00ac6, 0x510e527f, -0x64fa9774, 0x1f83d9ab, 0x5be0cd19)
+        val full = (prefix.size / 64) * 64
+        var off = 0
+        while (off < full) { compress(mid, prefix, off, w); off += 64 }
+        val tailLen = prefix.size - full
+        val buf = ByteArray(128)
+        prefix.copyInto(buf, 0, full, prefix.size)
+        val st = IntArray(8)
+        val digits = ByteArray(20)
+        var i = 0L
+        while (i < maxIterations) {
+            val n = start + i
+            var v = n; var dl = 0
+            do { digits[19 - dl] = ('0'.code + (v % 10).toInt()).toByte(); v /= 10; dl++ } while (v != 0L)
+            digits.copyInto(buf, tailLen, 20 - dl, 20)
+            val msgTail = tailLen + dl
+            val blocks = if (msgTail + 9 <= 64) 1 else 2
+            val end = blocks * 64
+            buf[msgTail] = 0x80.toByte()
+            for (k in msgTail + 1 until end - 8) buf[k] = 0
+            val bitLen = (prefix.size + dl).toLong() * 8
+            for (k in 0 until 8) buf[end - 1 - k] = ((bitLen ushr (8 * k)) and 0xFF).toByte()
+            mid.copyInto(st)
+            compress(st, buf, 0, w)
+            if (blocks == 2) compress(st, buf, 64, w)
+            if (leadingZeroBits(st) >= bits) return n
+            i++
+        }
+        return -1L
+    }
+    private fun leadingZeroBits(st: IntArray): Int {
+        var n = 0
+        for (x in st) {
+            if (x == 0) { n += 32; continue }
+            return n + x.countLeadingZeroBits()
+        }
+        return n
+    }
 }

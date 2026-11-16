@@ -6,12 +6,10 @@ import kotlin.random.Random
 
 object RendezvousPow {
     const val DEFAULT_BITS = 15
-
     fun challenge(rid: String, payload: String): String {
         val ph = Sha256Pure.hash(payload.encodeToByteArray())
         return rid + ":" + ph.toHexLower()
     }
-
     private fun leadingZeroBits(b: ByteArray): Int {
         var n = 0
         for (x in b) {
@@ -29,18 +27,20 @@ object RendezvousPow {
         }
         return n
     }
-
     fun verify(rid: String, payload: String, stamp: String, bits: Int): Boolean {
         if (bits <= 0) return true
         val h = Sha256Pure.hash((challenge(rid, payload) + ":" + stamp).encodeToByteArray())
         return leadingZeroBits(h) >= bits
     }
-
     fun solve(rid: String, payload: String, bits: Int, maxIterations: Long = 1L shl 26): String? {
         if (bits <= 0) return "0"
         val ch = challenge(rid, payload)
-
         val start = Random.nextLong(0L, 1L shl 40)
+        val n = Sha256Pure.solveDecimalSuffix((ch + ":").encodeToByteArray(), bits, start, maxIterations)
+        return if (n < 0) null else n.toString()
+    }
+    internal fun solveReference(rid: String, payload: String, bits: Int, start: Long, maxIterations: Long): String? {
+        val ch = challenge(rid, payload)
         var i = 0L
         while (i < maxIterations) {
             val s = (start + i).toString()
@@ -50,7 +50,10 @@ object RendezvousPow {
         }
         return null
     }
-
+    internal fun solveFrom(rid: String, payload: String, bits: Int, start: Long, maxIterations: Long): String? {
+        val n = Sha256Pure.solveDecimalSuffix((challenge(rid, payload) + ":").encodeToByteArray(), bits, start, maxIterations)
+        return if (n < 0) null else n.toString()
+    }
     private fun ByteArray.toHexLower(): String =
         joinToString("") { (it.toInt() and 0xFF).toString(16).padStart(2, '0') }
 }
