@@ -8,7 +8,7 @@ It is built on top of the Rust core in [`../core`](../core) through
 | File | What it does |
 |---|---|
 | [`MessageEncryption.kt`](src/commonMain/kotlin/app/umbera/core/crypto/MessageEncryption.kt) | message pipeline: ratchet, sealed sender, rendezvous IDs |
-| [`DoubleRatchet.kt`](src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt) | Double Ratchet sessions |
+| [`DoubleRatchet.kt`](src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt) | Double Ratchet sessions with the post-quantum root step (ML-KEM-1024 every 20 chains or 24 h) |
 | [`HybridKeyExchange.kt`](src/commonMain/kotlin/app/umbera/core/crypto/HybridKeyExchange.kt) | X25519 + ML-KEM-1024 key agreement |
 | [`HybridSignature.kt`](src/commonMain/kotlin/app/umbera/core/crypto/HybridSignature.kt) | classical + ML-DSA-65 signatures |
 | [`FileEncryption.kt`](src/commonMain/kotlin/app/umbera/core/crypto/FileEncryption.kt) | attachment encryption |
