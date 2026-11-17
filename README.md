@@ -69,7 +69,7 @@ the server can or cannot learn lives on the device, and that code is here:
 |---|---|
 | **Key agreement** | Hybrid X25519 + ML-KEM-1024 (CRYSTALS-Kyber). An attacker must break both to read a message. |
 | **Signatures** | Hybrid classical + ML-DSA-65 (CRYSTALS-Dilithium) identity keys. |
-| **1:1 sessions** | Double Ratchet: forward secrecy and break-in recovery for every conversation. |
+| **1:1 sessions** | Double Ratchet with a post-quantum step: an ML-KEM-1024 secret is mixed into the root key at session start and again every 20 new chains or 24 h (PQ3-style), so a recorded conversation stays closed even if X25519 is broken later. Forward secrecy and break-in recovery for every conversation. Source: [`DoubleRatchet.kt`](kotlin/src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt), tests: [`PqRatchetTest.kt`](kotlin/src/commonTest/kotlin/app/umbera/core/crypto/PqRatchetTest.kt). |
 | **Sealed sender** | The sender's identity is encrypted inside the message, never visible to the relay. |
 | **Rendezvous** | Mailbox addresses derived by both peers from a shared secret, rotated weekly. |
 | **Groups** | MLS (RFC 9420) with the X-Wing cipher suite (X25519 + ML-KEM-768), ML-DSA-65 signed commits and a cryptographically enforced member cap. |
@@ -129,7 +129,8 @@ Multiplatform code built on top of it.
   <img src="docs/assets/sealed-sender.svg" alt="Sealed sender flow" width="100%">
 </p>
 
-1. The message is encrypted with the conversation's **Double Ratchet** session.
+1. The message is encrypted with the conversation's **Double Ratchet** session, whose root key also mixes in a
+   fresh ML-KEM-1024 secret every 20 chains or 24 h ([details](docs/PROTOCOL.md#5-one-to-one-sessions-double-ratchet)).
 2. It is wrapped together with the sender's identity into an **inner package**.
 3. The inner package is **sealed** to the recipient with a fresh ephemeral X25519 key and an ML-KEM-1024
    encapsulation; both secrets feed one HKDF, so the seal holds if either primitive survives.
