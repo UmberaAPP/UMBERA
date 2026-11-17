@@ -39,7 +39,7 @@ references and tests, is listed in [PQ_STATUS.md](PQ_STATUS.md).
 | Goal | How it is achieved |
 |---|---|
 | Confidentiality against today's and future adversaries | Hybrid X25519 + ML-KEM-1024 for every key agreement |
-| Forward secrecy and break-in recovery | Double Ratchet for 1:1, MLS epochs for groups |
+| Forward secrecy and break-in recovery | Double Ratchet with a periodic ML-KEM-1024 root step for 1:1, MLS epochs (X-Wing) for groups |
 | The relay does not learn the sender | Sealed sender: the sender's identity is inside the ciphertext |
 | The relay does not learn who talks to whom | Rendezvous addresses known only to the two peers, rotated weekly |
 | No identifiers outside the app | Accounts are a username; no phone number or e-mail is collected |
@@ -93,7 +93,7 @@ Source: [`HybridKeyExchange.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core
 
 ## 5. One-to-one sessions: Double Ratchet
 
-Conversations use the Double Ratchet algorithm over X25519:
+Conversations use the Double Ratchet algorithm over X25519, with a post-quantum root step (below):
 
 ```
 (root_key, chain_key) = HKDF-SHA256(ikm = DH_output, salt = root_key, info = "root",  L = 64)

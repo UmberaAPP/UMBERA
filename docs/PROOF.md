@@ -38,7 +38,7 @@ A proof is only as honest as its assumptions. These claims hold under the follow
 
 ```
 plaintext
-  └─ Double Ratchet (per conversation, keys only on the two phones)
+  └─ Double Ratchet + ML-KEM-1024 root step (per conversation, keys only on the two phones)
        └─ inner package: sender identity + ratchet ciphertext
             └─ sealed to the recipient:
                  ephemeral X25519  +  ML-KEM-1024 (Kyber) encapsulation
