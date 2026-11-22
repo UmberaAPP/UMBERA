@@ -1,7 +1,7 @@
 <a id="top"></a>
 
 <p align="center">
-  <img src="https://umbera.app/brand/github-core-banner.png" alt="umbera/core — the cryptographic core of the Umbera messenger" width="100%">
+  <img src="https://umbera.app/brand/github-core-banner.png" alt="umbera/core — the cryptographic core of Umbera" width="100%">
 </p>
 
 <p align="center">
@@ -9,7 +9,9 @@
   <img alt="Rust" src="https://img.shields.io/badge/rust-1.91%2B-1f1d29?style=flat-square&logo=rust">
   <img alt="Kotlin Multiplatform" src="https://img.shields.io/badge/kotlin-multiplatform-1f1d29?style=flat-square&logo=kotlin">
   <img alt="Post-quantum" src="https://img.shields.io/badge/post--quantum-ML--KEM%20%C2%B7%20ML--DSA-6aa0ff?style=flat-square">
-  <img alt="Tests: 114 passing" src="https://img.shields.io/badge/tests-114%20passing-5fd3a1?style=flat-square">
+  <a href="https://github.com/UmberaAPP/UMBERA/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/UmberaAPP/UMBERA/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://crates.io/crates/umbera-core"><img alt="crates.io" src="https://img.shields.io/crates/v/umbera-core?style=flat-square&color=8b6cff"></a>
+  <a href="https://docs.rs/umbera-core"><img alt="docs.rs" src="https://img.shields.io/docsrs/umbera-core?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -17,6 +19,7 @@
   <a href="https://apps.apple.com/app/id6805525799"><img alt="App Store" src="https://img.shields.io/badge/App%20Store-1f1d29?style=for-the-badge&logo=apple&logoColor=white"></a>
   <a href="https://play.google.com/store/apps/details?id=cc.umbera.app"><img alt="Google Play" src="https://img.shields.io/badge/Google%20Play-1f1d29?style=for-the-badge&logo=googleplay&logoColor=white"></a>
   <a href="https://x.com/umberaapp"><img alt="X" src="https://img.shields.io/badge/X-1f1d29?style=for-the-badge&logo=x&logoColor=white"></a>
+  <a href="https://discord.gg/P4VbVDYPm6"><img alt="Discord" src="https://img.shields.io/badge/Discord-1f1d29?style=for-the-badge&logo=discord&logoColor=white"></a>
 </p>
 
 <p align="center">
@@ -37,13 +40,28 @@
 
 ---
 
-**Umbera** is a private messenger built on one rule: *the server should never know who talks to whom.*
+**Umbera** is a private communication platform built on one rule: *the server should never know who talks to whom.*
 This repository contains the code that enforces that rule — the cryptographic core that runs on every
 Umbera device. It is open source under the Apache License 2.0, so that anyone can read it, run its tests, check our
 claims and reuse it.
 
 > No phone number. No email. Post-quantum end-to-end encryption. Sealed sender.
 > A relay that moves padded ciphertext between rotating mailbox addresses and learns nothing else.
+
+## Quick start
+
+```sh
+cargo add umbera-core
+```
+
+API docs are on [docs.rs/umbera-core](https://docs.rs/umbera-core). To check our claims instead of trusting them, clone the repo and run the proof tests:
+
+```sh
+git clone https://github.com/UmberaAPP/UMBERA && cd UMBERA/core
+cargo test --release --test proof
+```
+
+Questions or a review? Open a [discussion](https://github.com/UmberaAPP/UMBERA/discussions) or join our [Discord](https://discord.gg/P4VbVDYPm6). If this is useful to you, a star helps other people find it.
 
 ## Contents
 
@@ -62,7 +80,7 @@ claims and reuse it.
 
 ## Why this repository exists
 
-A messenger that promises privacy should not ask to be trusted blindly. Everything that decides what
+An app that promises privacy should not ask to be trusted blindly. Everything that decides what
 the server can or cannot learn lives on the device, and that code is here:
 
 | | |
