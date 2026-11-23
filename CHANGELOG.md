@@ -1,5 +1,14 @@
 # Changelog
 
+## Protocol: PQXDH session start — 23 November 2026
+
+- One-to-one sessions start with PQXDH, as in Signal: signed X25519 prekey, signed ML-KEM-1024 last-resort key and
+  one-time X25519 / ML-KEM-1024 keys, the bundle signed with secp256k1 and ML-DSA-65 and used only when both
+  signatures match the contact's pinned keys. Described in [PROTOCOL.md §5](docs/PROTOCOL.md#5-one-to-one-sessions-double-ratchet).
+- The contact's ML-KEM-1024 and ML-DSA-65 keys are now pinned like the classical keys, and key transparency checks
+  the ML-KEM key too.
+- Older app versions keep the previous session start. Ships in the next app release.
+
 ## umbera-core 1.1.0 (crates.io) and protocol sources — 16 November 2026
 
 ### Rust crate `umbera-core` 1.1.0
