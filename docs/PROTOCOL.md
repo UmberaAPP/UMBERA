@@ -93,7 +93,7 @@ Source: [`HybridKeyExchange.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core
 
 ## 5. One-to-one sessions: Double Ratchet
 
-Conversations use the Double Ratchet algorithm over X25519, with a post-quantum root step (below):
+Conversations use the Double Ratchet algorithm over X25519, started with PQXDH and with a post-quantum root step (below):
 
 ```
 (root_key, chain_key) = HKDF-SHA256(ikm = DH_output, salt = root_key, info = "root",  L = 64)
@@ -111,6 +111,25 @@ being useful after the next round-trip (break-in recovery). Old message keys are
 (forward secrecy).
 
 Source: [`DoubleRatchet.kt`](../kotlin/src/commonMain/kotlin/app/umbera/core/crypto/DoubleRatchet.kt).
+
+**Session start: PQXDH.** A new session starts the way Signal's PQXDH does. Each account device publishes a
+prekey bundle: a signed X25519 prekey (SPK), a signed ML-KEM-1024 last-resort key (LR) and a Merkle root over
+32 one-time X25519 keys and 32 one-time ML-KEM-1024 keys. The bundle is signed with both account keys,
+secp256k1 and ML-DSA-65, and is used only when both signatures verify against the keys pinned for that contact.
+Bundles are fetched anonymously (no account token, proof of work); each one-time key is handed out once.
+
+```
+DH1 = DH(IK_A, SPK_B)   DH2 = DH(EK_A, IK_B)   DH3 = DH(EK_A, SPK_B)   DH4 = DH(EK_A, OPK_B)   (if a one-time key is left)
+(CT, SS) = ML-KEM-1024.Encaps(PQPK_B)            (one-time ML-KEM key, else LR)
+SK = HKDF-SHA256(ikm  = 0xFF*32 || DH1 || DH2 || DH3 [|| DH4] || SS,
+                 salt = 0*32,
+                 info = "umbera-pqxdh-v1" || ids || IK_A || IK_B || SPK || H(PQPK) || H(init))
+```
+
+`SK` is the first root key. The init header (key ids, `EK_A`, `CT`) is bound into the AEAD of every message of the
+first chain until the responder answers; the responder deletes the one-time keys only after that message is stored
+and rejects a replayed start. A bundle is valid for 14 days. When the contact runs an older version, has no bundle,
+or the bundle fails verification, the session starts the previous way and is restarted with PQXDH later.
 
 **Post-quantum root key.** An ML-KEM-1024 shared secret is mixed into the root key on session start and again every 20
 new chains or every 24 h (ratchet version `root+mlkem1024`), so the root key also depends on a
